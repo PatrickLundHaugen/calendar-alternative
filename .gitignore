@@ -1,0 +1,13 @@
+# .NET
+bin/
+obj/
+
+# Node / frontend
+node_modules/
+dist/
+
+# Local configuration / secrets
+appsettings.Development.json
+
+# Local database
+calendar.db
