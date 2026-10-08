@@ -10,6 +10,7 @@ import { WeekView } from "@/components/WeekView"
 import { createEvent, deleteEvent, getEvents, toLocalString, updateEvent } from "@/lib/api"
 import { draftToRequest, eventToDraft, newDraft, type EventDraft } from "@/lib/draft"
 import type { CalendarEvent } from "@/types"
+import { ChatPanel } from "@/components/ChatPanel"
 
 const W = { weekStartsOn: 1 as const }
 
@@ -58,6 +59,11 @@ export default function App() {
     reload()
   }
 
+  function handleScheduled(start: Date) {
+    setDate(start) // jump to the week or month of the new event
+    reload()
+  }
+
   async function handleMove(id: number, newStart: Date) {
     const ev = events.find((e) => e.id === id)
     if (!ev) return
@@ -95,37 +101,41 @@ export default function App() {
       : format(date, "MMMM yyyy")
 
   return (
-    <div className="flex h-screen flex-col">
-      <CalendarHeader
-        label={label}
-        view={view}
-        onViewChange={setView}
-        onPrev={() => step(-1)}
-        onNext={() => step(1)}
-        onNew={() => setDraft(newDraft(startOfHour(addHours(new Date(), 1))))}
-      />
-      {error && <p className="px-4 py-2 text-sm text-red-600">{error}</p>}
+    <div className="flex h-dvh flex-col md:flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <CalendarHeader
+          label={label}
+          view={view}
+          onViewChange={setView}
+          onPrev={() => step(-1)}
+          onNext={() => step(1)}
+          onNew={() => setDraft(newDraft(startOfHour(addHours(new Date(), 1))))}
+        />
+        {error && <p className="px-4 py-2 text-sm text-red-600">{error}</p>}
 
-      <div className="min-h-0 flex-1">
-        {view === "week" ? (
-          <WeekView
-            weekStart={from}
-            events={events}
-            onSlotClick={(start) => setDraft(newDraft(start))}
-            onEventClick={(e) => setDraft(eventToDraft(e))}
-            onEventMove={handleMove}
-          />
-        ) : (
-          <MonthView
-            date={date}
-            events={events}
-            onDayClick={(day) => setDraft(newDraft(addHours(startOfDay(day), 9)))}
-            onEventClick={(e) => setDraft(eventToDraft(e))}
-            onShowWeek={(day) => { setDate(day); setView("week") }}
-            onEventMove={handleMove}
-          />
-        )}
+        <div className="min-h-0 flex-1">
+          {view === "week" ? (
+            <WeekView
+              weekStart={from}
+              events={events}
+              onSlotClick={(start) => setDraft(newDraft(start))}
+              onEventClick={(e) => setDraft(eventToDraft(e))}
+              onEventMove={handleMove}
+            />
+          ) : (
+            <MonthView
+              date={date}
+              events={events}
+              onDayClick={(day) => setDraft(newDraft(addHours(startOfDay(day), 9)))}
+              onEventClick={(e) => setDraft(eventToDraft(e))}
+              onShowWeek={(day) => { setDate(day); setView("week") }}
+              onEventMove={handleMove}
+            />
+          )}
+        </div>
       </div>
+
+      <ChatPanel onScheduled={handleScheduled} />
 
       <EventDialog
         draft={draft}

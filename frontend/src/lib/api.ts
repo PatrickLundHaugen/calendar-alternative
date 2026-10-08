@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import type { CalendarEvent } from "@/types"
+import type { CalendarEvent, ChatResponse } from "@/types"
 
 export type SaveEventRequest = { title: string; start: string; end: string }
 
@@ -30,4 +30,10 @@ export async function updateEvent(id: number, req: SaveEventRequest): Promise<vo
 
 export async function deleteEvent(id: number): Promise<void> {
   await ensureOk(await fetch(`/api/events/${id}`, { method: "DELETE" }))
+}
+
+export async function sendChat(message: string): Promise<ChatResponse> {
+  const res = await fetch("/api/chat", { method: "POST", headers: json, body: JSON.stringify({ message }) })
+  await ensureOk(res)
+  return res.json()
 }
