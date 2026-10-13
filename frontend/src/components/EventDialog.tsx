@@ -10,20 +10,23 @@ type Props = {
   onClose: () => void
   onSave: (d: EventDraft) => Promise<void>
   onDelete: (id: number) => Promise<void>
+  onReschedule: (id: number) => void
 }
 
-export function EventDialog({ draft, onClose, onSave, onDelete }: Props) {
+export function EventDialog({ draft, onClose, onSave, onDelete, onReschedule }: Props) {
   return (
     <Dialog open={draft !== null} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent>
-        {draft && <EventForm draft={draft} onClose={onClose} onSave={onSave} onDelete={onDelete} />}
+        {draft && (
+          <EventForm draft={draft} onClose={onClose} onSave={onSave} onDelete={onDelete} onReschedule={onReschedule} />
+        )}
       </DialogContent>
     </Dialog>
   )
 }
 
 // Mounted only while the dialog is open, so its state resets every time it opens
-function EventForm({ draft, onClose, onSave, onDelete }: Omit<Props, "draft"> & { draft: EventDraft }) {
+function EventForm({ draft, onClose, onSave, onDelete, onReschedule }: Omit<Props, "draft"> & { draft: EventDraft }) {
   const [form, setForm] = useState<EventDraft>(draft)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -79,16 +82,29 @@ function EventForm({ draft, onClose, onSave, onDelete }: Omit<Props, "draft"> & 
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
         {form.id !== undefined && (
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={busy}
-            onClick={() => run(() => onDelete(form.id!))}
-          >
-            Delete
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy}
+              onClick={() => run(() => onDelete(form.id!))}
+            >
+              Delete
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                onReschedule(form.id!)
+                onClose()
+              }}
+            >
+              Reschedule with AI
+            </Button>
+          </>
         )}
         <Button type="button" variant="outline" className="ml-auto" onClick={onClose}>
           Cancel

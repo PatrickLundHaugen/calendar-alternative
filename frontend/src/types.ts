@@ -16,4 +16,5 @@ export type ChatResponse = {
   title: string | null
   durationMinutes: number | null
   suggestions: Slot[]
+  eventId: number | null
 }

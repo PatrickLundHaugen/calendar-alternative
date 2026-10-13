@@ -39,6 +39,7 @@ public class SchedulingService(EventService events)
 
         for (var day = DateOnly.FromDateTime(from); day <= lastDay; day = day.AddDays(1), dayIndex++)
         {
+            if (day == req.ExcludeDay) continue;
             var midnight = day.ToDateTime(TimeOnly.MinValue);
             var dayStart = midnight.AddHours(DayStartHour);
             var dayEnd = midnight.AddHours(DayEndHour);

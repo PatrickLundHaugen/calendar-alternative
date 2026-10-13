@@ -33,6 +33,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<EventDraft | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [rescheduleTarget, setRescheduleTarget] = useState<CalendarEvent | null>(null)
 
   const { from, to } = useMemo(() => getRange(view, date), [view, date])
 
@@ -135,13 +136,18 @@ export default function App() {
         </div>
       </div>
 
-      <ChatPanel onScheduled={handleScheduled} />
+      <ChatPanel
+        target={rescheduleTarget}
+        onClearTarget={() => setRescheduleTarget(null)}
+        onScheduled={handleScheduled}
+      />
 
       <EventDialog
         draft={draft}
         onClose={() => setDraft(null)}
         onSave={handleSave}
         onDelete={handleDelete}
+        onReschedule={(id) => setRescheduleTarget(events.find((e) => e.id === id) ?? null)}
       />
     </div>
   )

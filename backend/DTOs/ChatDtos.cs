@@ -2,7 +2,7 @@ using CalendarAlternative.Api.DTOs;
 
 namespace CalendarAlternative.Api.DTOs;
 
-public record ChatRequest(string Message);
+public record ChatRequest(string Message, int? SelectedEventId = null, List<string>? History = null);
 
 // What the frontend receives. Title and DurationMinutes are needed later to create the event
 // when the user clicks a suggestion. Suggestions is empty when there is nothing to pick.
@@ -10,7 +10,8 @@ public record ChatResponse(
     string Reply,
     string? Title,
     int? DurationMinutes,
-    List<SlotSuggestion> Suggestions);
+    List<SlotSuggestion> Suggestions,
+    int? EventId = null); // set when the suggestions are for moving an existing event
 
 // What Gemini returns. Everything is a string or nullable because we do not trust it yet.
 public record ParsedRequest
@@ -23,4 +24,6 @@ public record ParsedRequest
     public string? PreferredTime { get; init; }
     public List<string>? PreferredDays { get; init; }
     public string? Reply { get; init; }
+    public string? EventTitleHint { get; init; }
+    public string? EventDate { get; init; }
 }

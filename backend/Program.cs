@@ -16,7 +16,7 @@ builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemi
 builder.Services.AddHttpClient<GeminiClient>(c =>
 {
     c.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
-    c.Timeout = TimeSpan.FromSeconds(30);
+    c.Timeout = TimeSpan.FromSeconds(20);
 });
 builder.Services.AddScoped<ChatService>();
 

@@ -9,6 +9,7 @@ public record SchedulingRequest(
     List<DayOfWeek>? PreferredDays = null,
     DateTime? NotBefore = null,
     int? IgnoreEventId = null,
-    int MaxSuggestions = 3);
+    int MaxSuggestions = 3,
+    DateOnly? ExcludeDay = null);
 
 public record SlotSuggestion(DateTime Start, DateTime End, bool MatchesPreferences);

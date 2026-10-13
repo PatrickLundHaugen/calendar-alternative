@@ -32,8 +32,12 @@ export async function deleteEvent(id: number): Promise<void> {
   await ensureOk(await fetch(`/api/events/${id}`, { method: "DELETE" }))
 }
 
-export async function sendChat(message: string): Promise<ChatResponse> {
-  const res = await fetch("/api/chat", { method: "POST", headers: json, body: JSON.stringify({ message }) })
+export async function sendChat(message: string, selectedEventId?: number, history?: string[]): Promise<ChatResponse> {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ message, selectedEventId, history }),
+  })
   await ensureOk(res)
   return res.json()
 }

@@ -49,4 +49,10 @@ public class EventService(AppDbContext db)
         await db.SaveChangesAsync();
         return true;
     }
+
+    public async Task<EventDto?> GetByIdAsync(int id)
+    {
+        var entity = await db.Events.FindAsync(id);
+        return entity is null ? null : ToDto(entity);
+    }
 }
