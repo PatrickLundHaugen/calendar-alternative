@@ -1,6 +1,7 @@
 import { addMinutes, format, isSameDay, parseISO } from "date-fns"
 import type { SaveEventRequest } from "@/lib/api"
 import type { CalendarEvent } from "@/types"
+import { colorForTitle, isEventColor, type EventColor } from "@/lib/colors"
 
 // What the form edits. Plain strings match the <input type="date"> and <input type="time"> values.
 export type EventDraft = {
@@ -9,6 +10,7 @@ export type EventDraft = {
   date: string // yyyy-MM-dd
   startTime: string // HH:mm
   endTime: string // HH:mm
+  color?: EventColor // undefined means "automatic, from the title"
 }
 
 // A new one-hour draft starting at the given moment (capped at 23:59)
@@ -35,6 +37,7 @@ export function eventToDraft(e: CalendarEvent): EventDraft {
     date: format(start, "yyyy-MM-dd"),
     startTime: format(start, "HH:mm"),
     endTime: format(end, "HH:mm"),
+    color: isEventColor(e.color) ? e.color : undefined,
   }
 }
 
@@ -43,5 +46,6 @@ export function draftToRequest(d: EventDraft): SaveEventRequest {
     title: d.title.trim(),
     start: `${d.date}T${d.startTime}:00`,
     end: `${d.date}T${d.endTime}:00`,
+    color: d.color ?? colorForTitle(d.title),
   }
 }

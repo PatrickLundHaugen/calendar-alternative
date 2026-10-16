@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { format, parseISO } from "date-fns"
-import { Check, RotateCw, SendHorizontal, X } from "lucide-react"
+import { Check, RotateCw, SendHorizontal, Sparkles, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createEvent, sendChat, toLocalString, updateEvent } from "@/lib/api"
+import { COLORS, colorForTitle, resolveColor, type EventColor } from "@/lib/colors"
+import { cn } from "@/lib/utils"
 import type { CalendarEvent, Slot } from "@/types"
 
 type Message =
@@ -14,6 +16,7 @@ type Message =
       text: string
       error?: boolean
       title?: string
+      color?: EventColor
       eventId?: number // set when the suggestions move an existing event
       slots?: Slot[]
       chosen?: number // index of the slot the user confirmed
@@ -29,12 +32,14 @@ const WELCOME: Message = {
 }
 
 type Props = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   target: CalendarEvent | null // event selected for rescheduling
   onClearTarget: () => void
   onScheduled: (start: Date) => void
 }
 
-export function ChatPanel({ target, onClearTarget, onScheduled }: Props) {
+export function ChatPanel({ open, onOpenChange, target, onClearTarget, onScheduled }: Props) {
   const [messages, setMessages] = useState<Message[]>([WELCOME])
   const [input, setInput] = useState("")
   const [busy, setBusy] = useState(false)
@@ -44,12 +49,12 @@ export function ChatPanel({ target, onClearTarget, onScheduled }: Props) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
-  }, [messages, busy])
+  }, [messages, busy, open])
 
   // When an event is selected for rescheduling, jump straight to typing
   useEffect(() => {
-    if (target) inputRef.current?.focus()
-  }, [target])
+    if (target && open) inputRef.current?.focus()
+  }, [target, open])
 
   const add = (m: DistributiveOmit<Message, "id">) =>
     setMessages((list) => [...list, { ...m, id: nextId.current++ } as Message])
@@ -58,6 +63,9 @@ export function ChatPanel({ target, onClearTarget, onScheduled }: Props) {
     add({ role: "assistant", text: e instanceof Error ? e.message : String(e), error: true })
 
   async function ask(text: string, history: string[], targetId?: number) {
+    // A moved event keeps its own color, a new one gets the color for its title
+    const targetColor = target && target.id === targetId ? resolveColor(target) : undefined
+
     setBusy(true)
     try {
       const r = await sendChat(text, targetId, history)
@@ -65,6 +73,7 @@ export function ChatPanel({ target, onClearTarget, onScheduled }: Props) {
         role: "assistant",
         text: r.reply,
         title: r.title ?? undefined,
+        color: targetColor ?? (r.title ? colorForTitle(r.title) : undefined),
         eventId: r.eventId ?? undefined,
         slots: r.suggestions,
       })
@@ -128,10 +137,10 @@ export function ChatPanel({ target, onClearTarget, onScheduled }: Props) {
     setChosen(index) // mark first, so a second click cannot repeat the action
     try {
       if (msg.eventId !== undefined) {
-        await updateEvent(msg.eventId, body) // move the existing event
+        await updateEvent(msg.eventId, body) // move the existing event, its color is kept
         if (target?.id === msg.eventId) onClearTarget()
       } else {
-        await createEvent(body)
+        await createEvent({ ...body, color: msg.color ?? colorForTitle(msg.title) })
       }
       onScheduled(parseISO(slot.start))
     } catch (err) {
@@ -141,93 +150,153 @@ export function ChatPanel({ target, onClearTarget, onScheduled }: Props) {
   }
 
   return (
-    <aside className="flex max-h-[40vh] shrink-0 flex-col border-t md:max-h-none md:w-96 md:border-l md:border-t-0">
-      <div className="hidden border-b px-4 py-3 text-sm font-medium md:block">Assistant</div>
-
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-        {messages.map((m) =>
-          m.role === "user" ? (
-            <div key={m.id} className="ml-auto w-fit max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
-              {m.text}
-            </div>
-          ) : (
-            <div key={m.id} className="max-w-[92%] space-y-2">
-              <div className={`w-fit rounded-lg bg-muted px-3 py-2 text-sm ${m.error ? "text-red-600" : ""}`}>
-                {m.text}
-              </div>
-
-              {m.retry && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => retry(m.id)}
-                >
-                  <RotateCw /> Try again
-                </Button>
-              )}
-
-              {m.slots?.map((slot, i) => {
-                const start = parseISO(slot.start)
-                const end = parseISO(slot.end)
-                return (
-                  <Button
-                    key={slot.start}
-                    variant="outline"
-                    disabled={m.chosen !== undefined}
-                    onClick={() => confirm(m.id, i)}
-                    className="h-auto w-full justify-between py-2 text-left disabled:opacity-60"
-                  >
-                    <span>
-                      <span className="block text-sm">{format(start, "EEE d MMM")}</span>
-                      <span className="block text-xs font-normal text-muted-foreground">
-                        {format(start, "HH:mm")} - {format(end, "HH:mm")}
-                        {!slot.matchesPreferences && " (outside your preferences)"}
-                      </span>
-                    </span>
-                    {m.chosen === i && <Check className="size-4" />}
-                  </Button>
-                )
-              })}
-
-              {m.chosen !== undefined && (
-                <p className="text-xs text-muted-foreground">
-                  {m.eventId !== undefined ? "Event moved." : "Added to your calendar."}
-                </p>
-              )}
-            </div>
-          )
-        )}
-
-        {busy && <div className="w-fit rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">Thinking...</div>}
-        <div ref={bottomRef} />
-      </div>
-
-      {target && (
-        <div className="flex items-center gap-2 border-t bg-muted/40 px-3 py-2 text-xs">
-          <span className="min-w-0 flex-1 truncate">
-            Rescheduling: <span className="font-medium">{target.title}</span>,{" "}
-            {format(parseISO(target.start), "EEE d MMM HH:mm")}
-          </span>
-          <Button variant="ghost" size="icon" className="size-6" onClick={onClearTarget} aria-label="Cancel rescheduling">
-            <X className="size-3" />
-          </Button>
-        </div>
+    <>
+      {/* Closed: a tab on the right edge (desktop) or a round button (phone) */}
+      {!open && (
+        <>
+          <button
+            type="button"
+            onClick={() => onOpenChange(true)}
+            aria-label="Open assistant"
+            className="fixed right-0 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-center gap-3 rounded-l-2xl bg-primary px-2.5 py-4 text-primary-foreground shadow-lg transition-transform hover:-translate-x-0.5 md:flex"
+          >
+            <Sparkles className="size-4" />
+            <span className="text-xs [writing-mode:vertical-rl]">Ask AI</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpenChange(true)}
+            aria-label="Open assistant"
+            className="fixed bottom-5 right-5 z-30 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
+          >
+            <Sparkles className="size-5" />
+          </button>
+        </>
       )}
 
-      <form onSubmit={send} className="flex items-center gap-2 border-t p-3">
-        <Input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={target ? "When should it move? e.g. Thursday evening" : "What do you need to do?"}
-          maxLength={500}
-          disabled={busy}
-        />
-        <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send">
-          <SendHorizontal />
-        </Button>
-      </form>
-    </aside>
+      {/* The panel stays mounted when closed, so the conversation is kept */}
+      <aside
+        inert={!open}
+        aria-hidden={!open}
+        className={cn(
+          "shrink-0 overflow-hidden rounded-3xl bg-card shadow-sm transition-all duration-300 ease-out",
+          open
+            ? "mx-3 mb-3 h-[45dvh] md:mx-0 md:my-3 md:mr-3 md:h-auto md:w-96"
+            : "mx-3 h-0 md:mx-0 md:my-3 md:h-auto md:w-0"
+        )}
+      >
+        <div className="flex h-full min-h-0 flex-col md:w-96">
+          <div className="flex items-center justify-between px-5 pb-2 pt-4">
+            <div>
+              <div className="text-base font-semibold tracking-tight">Assistant</div>
+              <div className="text-xs text-muted-foreground">Describe what you need to do</div>
+            </div>
+            <Button variant="outline" size="icon" onClick={() => onOpenChange(false)} aria-label="Close assistant">
+              <X />
+            </Button>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-2">
+            {messages.map((m) =>
+              m.role === "user" ? (
+                <div
+                  key={m.id}
+                  className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground"
+                >
+                  {m.text}
+                </div>
+              ) : (
+                <div key={m.id} className="max-w-[92%] space-y-2">
+                  <div
+                    className={`w-fit rounded-2xl rounded-bl-md bg-muted px-4 py-2.5 text-sm ${
+                      m.error ? "text-destructive" : ""
+                    }`}
+                  >
+                    {m.text}
+                  </div>
+
+                  {m.retry && (
+                    <Button variant="outline" size="sm" disabled={busy} onClick={() => retry(m.id)}>
+                      <RotateCw /> Try again
+                    </Button>
+                  )}
+
+                  {m.slots?.map((slot, i) => {
+                    const start = parseISO(slot.start)
+                    const end = parseISO(slot.end)
+                    return (
+                      <button
+                        key={slot.start}
+                        type="button"
+                        disabled={m.chosen !== undefined}
+                        onClick={() => confirm(m.id, i)}
+                        className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-colors disabled:cursor-default disabled:opacity-60 ${
+                          COLORS[m.color ?? colorForTitle(m.title ?? "")].card
+                        }`}
+                      >
+                        <span>
+                          <span className="block text-sm">{format(start, "EEE d MMM")}</span>
+                          <span className="block text-xs opacity-70">
+                            {format(start, "HH:mm")} - {format(end, "HH:mm")}
+                            {!slot.matchesPreferences && " (outside your preferences)"}
+                          </span>
+                        </span>
+                        {m.chosen === i && <Check className="size-4" />}
+                      </button>
+                    )
+                  })}
+
+                  {m.chosen !== undefined && (
+                    <p className="text-xs text-muted-foreground">
+                      {m.eventId !== undefined ? "Event moved." : "Added to your calendar."}
+                    </p>
+                  )}
+                </div>
+              )
+            )}
+
+            {busy && (
+              <div className="w-fit rounded-2xl rounded-bl-md bg-muted px-4 py-2.5 text-sm text-muted-foreground">
+                Thinking...
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          {target && (
+            <div className="mx-3 mb-2 flex items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs">
+              <span className="min-w-0 flex-1 truncate">
+                Rescheduling: <span className="font-semibold">{target.title}</span>,{" "}
+                {format(parseISO(target.start), "EEE d MMM HH:mm")}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6"
+                onClick={onClearTarget}
+                aria-label="Cancel rescheduling"
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          )}
+
+          <form onSubmit={send} className="flex items-center gap-2 p-3">
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={target ? "When should it move? e.g. Thursday evening" : "What do you need to do?"}
+              maxLength={500}
+              disabled={busy}
+              className="h-10 rounded-full px-4"
+            />
+            <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send">
+              <SendHorizontal />
+            </Button>
+          </form>
+        </div>
+      </aside>
+    </>
   )
 }

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { EventDraft } from "@/lib/draft"
+import { COLORS, COLOR_KEYS, colorForTitle } from "@/lib/colors"
 
 type Props = {
   draft: EventDraft | null
@@ -32,6 +33,7 @@ function EventForm({ draft, onClose, onSave, onDelete, onReschedule }: Omit<Prop
   const [busy, setBusy] = useState(false)
 
   const set = (patch: Partial<EventDraft>) => setForm((f) => ({ ...f, ...patch }))
+  const activeColor = form.color ?? colorForTitle(form.title)
 
   async function run(action: () => Promise<void>) {
     setBusy(true)
@@ -80,7 +82,25 @@ function EventForm({ draft, onClose, onSave, onDelete, onReschedule }: Omit<Prop
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="grid gap-2">
+        <Label>Color</Label>
+        <div className="flex flex-wrap gap-2">
+          {COLOR_KEYS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-label={key}
+              aria-pressed={activeColor === key}
+              onClick={() => set({ color: key })}
+              className={`size-7 rounded-full ring-offset-2 ring-offset-background transition ${COLORS[key].swatch} ${
+                activeColor === key ? "ring-2 ring-foreground" : "hover:scale-110"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
             <div className="flex flex-wrap items-center gap-2">
         {form.id !== undefined && (

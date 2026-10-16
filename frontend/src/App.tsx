@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import {
-  addDays, addHours, addMinutes, addMonths, differenceInMinutes, endOfMonth, endOfWeek, format,
+  addDays, addHours, addMinutes, addMonths, differenceInMinutes, endOfMonth, isSameMonth, isSameYear, format,
   isSameDay, parseISO, set, startOfDay, startOfHour, startOfMonth, startOfWeek,
 } from "date-fns"
 import { CalendarHeader, type View } from "@/components/CalendarHeader"
@@ -11,6 +11,7 @@ import { createEvent, deleteEvent, getEvents, toLocalString, updateEvent } from 
 import { draftToRequest, eventToDraft, newDraft, type EventDraft } from "@/lib/draft"
 import type { CalendarEvent } from "@/types"
 import { ChatPanel } from "@/components/ChatPanel"
+import { useTheme } from "@/lib/theme"
 
 const W = { weekStartsOn: 1 as const }
 
@@ -27,6 +28,7 @@ function getRange(view: View, date: Date) {
 }
 
 export default function App() {
+  const { theme, toggle: toggleTheme } = useTheme()
   const [view, setView] = useState<View>("week")
   const [date, setDate] = useState(() => new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -34,8 +36,14 @@ export default function App() {
   const [draft, setDraft] = useState<EventDraft | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [rescheduleTarget, setRescheduleTarget] = useState<CalendarEvent | null>(null)
+  const [chatOpen, setChatOpenState] = useState(() => localStorage.getItem("chatOpen") === "true")
 
   const { from, to } = useMemo(() => getRange(view, date), [view, date])
+
+  function setChatOpen(open: boolean) {
+    localStorage.setItem("chatOpen", String(open)) // remembered between visits
+    setChatOpenState(open)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -96,23 +104,33 @@ export default function App() {
   const step = (dir: 1 | -1) =>
     setDate((d) => (view === "week" ? addDays(d, 7 * dir) : addMonths(d, dir)))
 
-  const label =
-    view === "week"
-      ? `Week ${format(from, "I")}: ${format(from, "d MMM")} - ${format(endOfWeek(date, W), "d MMM yyyy")}`
-      : format(date, "MMMM yyyy")
+  const weekEnd = addDays(from, 6)
+  const title =
+    view === "month"
+      ? format(date, "MMMM yyyy")
+      : isSameMonth(from, weekEnd)
+        ? format(from, "MMMM yyyy")
+        : isSameYear(from, weekEnd)
+          ? `${format(from, "MMM")} - ${format(weekEnd, "MMM yyyy")}`
+          : `${format(from, "MMM yyyy")} - ${format(weekEnd, "MMM yyyy")}`
+  const badge = view === "week" ? `Week ${format(from, "I")}` : undefined
 
   return (
-    <div className="flex h-dvh flex-col md:flex-row">
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+    <div className="flex h-dvh flex-col bg-background md:flex-row">
+      <main className="m-3 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card shadow-sm">
         <CalendarHeader
-          label={label}
+          title={title}
+          badge={badge}
           view={view}
           onViewChange={setView}
           onPrev={() => step(-1)}
+          onToday={() => setDate(new Date())}
           onNext={() => step(1)}
           onNew={() => setDraft(newDraft(startOfHour(addHours(new Date(), 1))))}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
-        {error && <p className="px-4 py-2 text-sm text-red-600">{error}</p>}
+        {error && <p className="px-5 py-2 text-sm text-destructive">{error}</p>}
 
         <div className="min-h-0 flex-1">
           {view === "week" ? (
@@ -134,9 +152,11 @@ export default function App() {
             />
           )}
         </div>
-      </div>
+      </main>
 
       <ChatPanel
+        open={chatOpen}
+        onOpenChange={setChatOpen}
         target={rescheduleTarget}
         onClearTarget={() => setRescheduleTarget(null)}
         onScheduled={handleScheduled}
@@ -147,7 +167,10 @@ export default function App() {
         onClose={() => setDraft(null)}
         onSave={handleSave}
         onDelete={handleDelete}
-        onReschedule={(id) => setRescheduleTarget(events.find((e) => e.id === id) ?? null)}
+        onReschedule={(id) => {
+          setRescheduleTarget(events.find((e) => e.id === id) ?? null)
+          setChatOpen(true) // make sure the assistant is visible
+        }}
       />
     </div>
   )

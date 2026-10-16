@@ -43,6 +43,7 @@ public class EventsController(EventService events) : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(req.Title)) return "Title is required.";
         if (req.End <= req.Start) return "End must be after start.";
+        if (req.Color is { Length: > 20 }) return "Invalid color.";
         return null;
     }
 }

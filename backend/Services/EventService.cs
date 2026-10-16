@@ -7,7 +7,7 @@ namespace CalendarAlternative.Api.Services;
 
 public class EventService(AppDbContext db)
 {
-    private static EventDto ToDto(CalendarEvent e) => new(e.Id, e.Title, e.Start, e.End);
+    private static EventDto ToDto(CalendarEvent e) => new(e.Id, e.Title, e.Start, e.End, e.Color);
 
     // Events that overlap the range [from, to). Overlap check: starts before the range ends
     // AND ends after the range starts. This also catches events that span the range edges.
@@ -22,7 +22,7 @@ public class EventService(AppDbContext db)
 
     public async Task<EventDto> CreateAsync(SaveEventRequest req)
     {
-        var entity = new CalendarEvent { Title = req.Title.Trim(), Start = req.Start, End = req.End };
+        var entity = new CalendarEvent { Title = req.Title.Trim(), Start = req.Start, End = req.End, Color = req.Color };
         db.Events.Add(entity);
         await db.SaveChangesAsync();
         return ToDto(entity);
@@ -36,6 +36,8 @@ public class EventService(AppDbContext db)
         entity.Title = req.Title.Trim();
         entity.Start = req.Start;
         entity.End = req.End;
+        if (req.Color is not null) entity.Color = req.Color;
+
         await db.SaveChangesAsync();
         return ToDto(entity);
     }

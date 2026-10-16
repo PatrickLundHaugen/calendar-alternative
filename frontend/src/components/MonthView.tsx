@@ -2,6 +2,7 @@ import {
   addDays, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday,
   parseISO, set, startOfDay, startOfMonth, startOfWeek,
 } from "date-fns"
+import { COLORS, resolveColor } from "@/lib/colors"
 import { allowDrop, readDrag, startDrag } from "@/lib/dnd"
 import type { CalendarEvent } from "@/types"
 
@@ -39,9 +40,9 @@ export function MonthView({ date, events, onDayClick, onEventClick, onShowWeek, 
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="grid grid-cols-7 border-b">
+      <div className="grid grid-cols-7 border-b border-border/60">
         {days.slice(0, 7).map((d) => (
-          <div key={d.toISOString()} className="py-2 text-center text-sm text-muted-foreground">
+          <div key={d.toISOString()} className="py-3 text-center text-xs text-muted-foreground">
             {format(d, "EEE")}
           </div>
         ))}
@@ -65,11 +66,15 @@ export function MonthView({ date, events, onDayClick, onEventClick, onShowWeek, 
               onClick={() => onDayClick(day)}
               onDragOver={allowDrop}
               onDrop={(ev) => handleDrop(ev, day)}
-              className={`cursor-pointer overflow-hidden border-b border-l p-1 ${
+              className={`cursor-pointer overflow-hidden border-b border-l border-border/60 p-1.5 ${
                 isSameMonth(day, date) ? "" : "bg-muted/40 text-muted-foreground"
               }`}
             >
-              <div className={`mb-1 text-xs ${isToday(day) ? "font-semibold underline underline-offset-4" : ""}`}>
+              <div
+                className={`mb-1 flex size-6 items-center justify-center rounded-full text-xs ${
+                  isToday(day) ? "bg-primary text-primary-foreground" : ""
+                }`}
+              >
                 {format(day, "d")}
               </div>
 
@@ -82,7 +87,7 @@ export function MonthView({ date, events, onDayClick, onEventClick, onShowWeek, 
                     ev.stopPropagation()
                     onEventClick(e)
                   }}
-                  className="mb-0.5 truncate rounded bg-primary/10 px-1 text-xs text-foreground hover:bg-primary/20"
+                  className={`mb-1 truncate rounded-full px-2 py-0.5 text-xs transition-colors ${COLORS[resolveColor(e)].card}`}
                 >
                   {format(parseISO(e.start), "HH:mm")} {e.title}
                 </div>
@@ -90,7 +95,7 @@ export function MonthView({ date, events, onDayClick, onEventClick, onShowWeek, 
 
               {hidden > 0 && (
                 <button
-                  className="text-xs text-muted-foreground hover:underline"
+                  className="px-2 text-xs text-muted-foreground hover:underline"
                   onClick={(ev) => {
                     ev.stopPropagation()
                     onShowWeek(day)

@@ -117,6 +117,16 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+@theme {
+  --font-sans: "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  :root { color-scheme: light; }
+  .dark { color-scheme: dark; }
+  body { font-weight: 500; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -127,4 +137,58 @@
   html {
     @apply font-sans;
     }
+}
+
+/* Light: soft gray page, white cards, black primary. Dark: deep neutral, blue accent. */
+:root {
+  --radius: 1rem;
+  --background: oklch(0.94 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(0.985 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(0.985 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.92 0 0);
+  --secondary-foreground: oklch(0.18 0 0);
+  --muted: oklch(0.955 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.93 0 0);
+  --accent-foreground: oklch(0.18 0 0);
+  --destructive: oklch(0.58 0.22 27);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.6 0 0);
+  --now: oklch(0.64 0.21 27);
+}
+
+.dark {
+  --background: oklch(0.15 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.2 0 0);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.24 0 0);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.63 0.19 256);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.27 0 0);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.26 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.3 0 0);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.7 0.19 22);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.63 0.19 256);
+  --now: oklch(0.63 0.19 256);
+}
+
+@theme inline {
+  --color-now: var(--now);
+}
+
+@layer base {
+  body { letter-spacing: -0.011em; }
 }

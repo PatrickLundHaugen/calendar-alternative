@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import type { CalendarEvent, ChatResponse } from "@/types"
 
-export type SaveEventRequest = { title: string; start: string; end: string }
+export type SaveEventRequest = { title: string; start: string; end: string; color?: string }
 
 // Local wall-clock string, no timezone suffix. Matches what the backend stores.
 export const toLocalString = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm:ss")
