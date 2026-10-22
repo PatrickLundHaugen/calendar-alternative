@@ -179,14 +179,14 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
         inert={!open}
         aria-hidden={!open}
         className={cn(
-          "shrink-0 overflow-hidden rounded-3xl bg-card shadow-sm transition-all duration-300 ease-out",
+          "shrink-0 overflow-hidden rounded-2xl bg-card shadow-sm transition-all duration-300 ease-out",
           open
-            ? "mx-3 mb-3 h-[45dvh] md:mx-0 md:my-3 md:mr-3 md:h-auto md:w-96"
-            : "mx-3 h-0 md:mx-0 md:my-3 md:h-auto md:w-0"
+            ? "mx-3 mb-3 max-h-[50dvh] md:mx-0 md:my-3 md:mr-3 md:max-h-none md:w-96"
+            : "mx-3 max-h-0 md:mx-0 md:my-3 md:max-h-none md:w-0"
         )}
       >
-        <div className="flex h-full min-h-0 flex-col md:w-96">
-          <div className="flex items-center justify-between px-5 pb-2 pt-4">
+         <div className="flex max-h-[50dvh] min-h-0 flex-col md:h-full md:max-h-none md:w-96">
+          <div className="flex items-center justify-between px-5 pb-3 pt-5">
             <div>
               <div className="text-base font-semibold tracking-tight">Assistant</div>
               <div className="text-xs text-muted-foreground">Describe what you need to do</div>
@@ -196,7 +196,7 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
             </Button>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-2">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-2">
             {messages.map((m) =>
               m.role === "user" ? (
                 <div
@@ -230,7 +230,7 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
                         type="button"
                         disabled={m.chosen !== undefined}
                         onClick={() => confirm(m.id, i)}
-                        className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-colors disabled:cursor-default disabled:opacity-60 ${
+                        className={`flex w-full items-center justify-between rounded-card px-4 py-3 text-left transition-colors disabled:cursor-default disabled:opacity-60 ${
                           COLORS[m.color ?? colorForTitle(m.title ?? "")].card
                         }`}
                       >
@@ -256,15 +256,15 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
             )}
 
             {busy && (
-              <div className="w-fit rounded-2xl rounded-bl-md bg-muted px-4 py-2.5 text-sm text-muted-foreground">
-                Thinking...
+              <div className="flex w-fit items-center gap-2 rounded-2xl rounded-bl-md bg-muted px-4 py-2.5 text-sm">
+                <span className="shimmer">Thinking...</span>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
           {target && (
-            <div className="mx-3 mb-2 flex items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs">
+            <div className="mx-4 mb-2 flex items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs">
               <span className="min-w-0 flex-1 truncate">
                 Rescheduling: <span className="font-semibold">{target.title}</span>,{" "}
                 {format(parseISO(target.start), "EEE d MMM HH:mm")}
@@ -281,7 +281,7 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
             </div>
           )}
 
-          <form onSubmit={send} className="flex items-center gap-2 p-3">
+          <form onSubmit={send} className="flex items-center gap-2 p-4">
             <Input
               ref={inputRef}
               value={input}

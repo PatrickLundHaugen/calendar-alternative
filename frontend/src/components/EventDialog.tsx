@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -17,7 +18,7 @@ type Props = {
 export function EventDialog({ draft, onClose, onSave, onDelete, onReschedule }: Props) {
   return (
     <Dialog open={draft !== null} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent>
+      <DialogContent showCloseButton={false}>
         {draft && (
           <EventForm draft={draft} onClose={onClose} onSave={onSave} onDelete={onDelete} onReschedule={onReschedule} />
         )}
@@ -57,8 +58,24 @@ function EventForm({ draft, onClose, onSave, onDelete, onReschedule }: Omit<Prop
 
   return (
     <form onSubmit={submit} className="grid gap-4">
-      <DialogHeader>
+      <DialogHeader className="flex-row items-center justify-between space-y-0 text-left">
         <DialogTitle>{form.id ? "Edit event" : "New event"}</DialogTitle>
+        {form.id !== undefined && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            title="Reschedule with AI"
+            aria-label="Reschedule with AI"
+            disabled={busy}
+            onClick={() => {
+              onReschedule(form.id!)
+              onClose()
+            }}
+          >
+            <Sparkles />
+          </Button>
+        )}
       </DialogHeader>
 
       <div className="grid gap-2">
@@ -102,36 +119,26 @@ function EventForm({ draft, onClose, onSave, onDelete, onReschedule }: Omit<Prop
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 pt-1">
         {form.id !== undefined && (
-          <>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={busy}
-              onClick={() => run(() => onDelete(form.id!))}
-            >
-              Delete
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => {
-                onReschedule(form.id!)
-                onClose()
-              }}
-            >
-              Reschedule with AI
-            </Button>
-          </>
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            disabled={busy}
+            onClick={() => run(() => onDelete(form.id!))}
+          >
+            Delete
+          </Button>
         )}
-        <Button type="button" variant="outline" className="ml-auto" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={busy}>
-          Save
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={busy}>
+            Save
+          </Button>
+        </div>
       </div>
     </form>
   )

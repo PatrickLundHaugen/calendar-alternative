@@ -187,8 +187,28 @@
 
 @theme inline {
   --color-now: var(--now);
+  --radius-card: 0.375rem;
 }
 
 @layer base {
   body { letter-spacing: -0.011em; }
+}
+
+/* Shimmer for the "Thinking..." text */
+.shimmer {
+  background: linear-gradient(90deg, var(--muted-foreground) 30%, var(--foreground) 50%, var(--muted-foreground) 70%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.8s linear infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer { animation: none; background: none; color: var(--muted-foreground); }
 }

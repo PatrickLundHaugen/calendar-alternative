@@ -117,7 +117,7 @@ export default function App() {
 
   return (
     <div className="flex h-dvh flex-col bg-background md:flex-row">
-      <main className="m-3 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card shadow-sm">
+      <main className="m-3 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-card shadow-sm">
         <CalendarHeader
           title={title}
           badge={badge}
