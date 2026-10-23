@@ -19,6 +19,7 @@ builder.Services.AddHttpClient<GeminiClient>(c =>
     c.Timeout = TimeSpan.FromSeconds(20);
 });
 builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<ActivityLogService>();
 
 var app = builder.Build();
 

@@ -11,7 +11,13 @@ public class HealthController(AppDbContext db) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var count = await db.Events.CountAsync();
-        return Ok(new { status = "ok", eventCount = count });
+        return Ok(new
+        {
+            status = "ok",
+            eventCount = await db.Events.CountAsync(),
+            eventLogEntries = await db.EventLogEntries.CountAsync(),
+            suggestionSets = await db.SuggestionSets.CountAsync(),
+            chosenSuggestions = await db.SuggestionOptions.CountAsync(o => o.Chosen),
+        });
     }
 }

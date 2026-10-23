@@ -4,7 +4,7 @@ using CalendarAlternative.Api.DTOs;
 
 namespace CalendarAlternative.Api.Services;
 
-public class ChatService(GeminiClient gemini, SchedulingService scheduling, EventService events, ILogger<ChatService> logger)
+public class ChatService(GeminiClient gemini, SchedulingService scheduling, EventService events, ActivityLogService activity, ILogger<ChatService> logger)
 {
 
     private const int MaxDurationMinutes = 720;
@@ -42,8 +42,10 @@ public class ChatService(GeminiClient gemini, SchedulingService scheduling, Even
             return Say("Please choose a duration between 15 minutes and 12 hours.");
 
         var title = string.IsNullOrWhiteSpace(parsed.Title) ? "Task" : parsed.Title.Trim();
-        var slots = await scheduling.SuggestAsync(BuildRequest(parsed, minutes));
-        return new ChatResponse(BuildReply(title, minutes, slots), title, minutes, slots);
+        var request = BuildRequest(parsed, minutes);
+        var slots = await scheduling.SuggestAsync(request);
+        var setId = await activity.RecordSuggestionsAsync(title, minutes, request, slots);
+        return new ChatResponse(BuildReply(title, minutes, slots), title, minutes, slots, SuggestionSetId: setId);
     }
 
     private async Task<ChatResponse> RescheduleAsync(EventDto target, ParsedRequest parsed)
@@ -59,7 +61,8 @@ public class ChatService(GeminiClient gemini, SchedulingService scheduling, Even
         };
 
         var slots = await scheduling.SuggestAsync(request);
-        return new ChatResponse(BuildReply(target.Title, minutes, slots, target), target.Title, minutes, slots, target.Id);
+        var setId = await activity.RecordSuggestionsAsync(target.Title, minutes, request, slots);
+        return new ChatResponse(BuildReply(target.Title, minutes, slots, target), target.Title, minutes, slots, target.Id, setId);
     }
 
     // Finds the event Gemini's keywords point at. Returns the event, or a message for the user.

@@ -11,7 +11,8 @@ public record ChatResponse(
     string? Title,
     int? DurationMinutes,
     List<SlotSuggestion> Suggestions,
-    int? EventId = null); // set when the suggestions are for moving an existing event
+    int? EventId = null, // set when the suggestions are for moving an existing event
+    int? SuggestionSetId = null); // id of the logged suggestions, sent back when one is confirmed
 
 // What Gemini returns. Everything is a string or nullable because we do not trust it yet.
 public record ParsedRequest

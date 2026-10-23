@@ -40,6 +40,130 @@ namespace CalendarAlternative.Api.Migrations
 
                     b.ToTable("Events");
                 });
+
+            modelBuilder.Entity("CalendarAlternative.Api.Models.EventLogEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("End")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PreviousEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PreviousStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Start")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SuggestionSetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EventLogEntries");
+                });
+
+            modelBuilder.Entity("CalendarAlternative.Api.Models.SuggestionOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Chosen")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("End")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("MatchesPreferences")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Start")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SuggestionSetId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuggestionSetId");
+
+                    b.ToTable("SuggestionOptions");
+                });
+
+            modelBuilder.Entity("CalendarAlternative.Api.Models.SuggestionSet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("Deadline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MovedEventId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PreferredDays")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredTime")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SuggestionSets");
+                });
+
+            modelBuilder.Entity("CalendarAlternative.Api.Models.SuggestionOption", b =>
+                {
+                    b.HasOne("CalendarAlternative.Api.Models.SuggestionSet", null)
+                        .WithMany("Options")
+                        .HasForeignKey("SuggestionSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CalendarAlternative.Api.Models.SuggestionSet", b =>
+                {
+                    b.Navigation("Options");
+                });
 #pragma warning restore 612, 618
         }
     }
