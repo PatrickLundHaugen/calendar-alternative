@@ -1,7 +1,18 @@
 import { format } from "date-fns"
 import type { CalendarEvent, ChatResponse } from "@/types"
 
-export type SaveEventRequest = { title: string; start: string; end: string; color?: string }
+// Where a save came from. Only used for the activity log on the backend.
+export type EventOrigin = "Form" | "Drag" | "AiNew" | "AiMove"
+
+export type SaveEventRequest = {
+  title: string
+  start: string
+  end: string
+  color?: string
+  source?: EventOrigin // missing means "Form"
+  suggestionSetId?: number // set when the save confirms a suggestion
+  slotIndex?: number
+}
 
 // Local wall-clock string, no timezone suffix. Matches what the backend stores.
 export const toLocalString = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm:ss")

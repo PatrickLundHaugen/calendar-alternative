@@ -18,4 +18,5 @@ export type ChatResponse = {
   durationMinutes: number | null
   suggestions: Slot[]
   eventId: number | null
+  suggestionSetId: number | null // id of the logged suggestions, sent back when one is confirmed
 }

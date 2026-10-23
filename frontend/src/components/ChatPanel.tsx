@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns"
 import { Check, RotateCw, SendHorizontal, Sparkles, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createEvent, sendChat, toLocalString, updateEvent } from "@/lib/api"
+import { createEvent, sendChat, toLocalString, updateEvent, type SaveEventRequest } from "@/lib/api"
 import { COLORS, colorForTitle, resolveColor, type EventColor } from "@/lib/colors"
 import { cn } from "@/lib/utils"
 import type { CalendarEvent, Slot } from "@/types"
@@ -18,6 +18,7 @@ type Message =
       title?: string
       color?: EventColor
       eventId?: number // set when the suggestions move an existing event
+      suggestionSetId?: number // id of the logged suggestions, sent back on confirm
       slots?: Slot[]
       chosen?: number // index of the slot the user confirmed
       retry?: { text: string; history: string[]; targetId?: number } // set on failed requests
@@ -75,6 +76,7 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
         title: r.title ?? undefined,
         color: targetColor ?? (r.title ? colorForTitle(r.title) : undefined),
         eventId: r.eventId ?? undefined,
+        suggestionSetId: r.suggestionSetId ?? undefined,
         slots: r.suggestions,
       })
     } catch (err) {
@@ -124,10 +126,13 @@ export function ChatPanel({ open, onOpenChange, target, onClearTarget, onSchedul
     if (!msg || msg.role !== "assistant" || !msg.slots || !msg.title || msg.chosen !== undefined) return
 
     const slot = msg.slots[index]
-    const body = {
+    const body: SaveEventRequest = {
       title: msg.title,
       start: toLocalString(parseISO(slot.start)),
       end: toLocalString(parseISO(slot.end)),
+      source: msg.eventId !== undefined ? "AiMove" : "AiNew",
+      suggestionSetId: msg.suggestionSetId,
+      slotIndex: index,
     }
     const setChosen = (chosen: number | undefined) =>
       setMessages((list) =>

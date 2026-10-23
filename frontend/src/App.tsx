@@ -94,7 +94,7 @@ export default function App() {
     // Optimistic update: show the move immediately
     setEvents((list) => list.map((e) => (e.id === id ? moved : e)))
     try {
-      await updateEvent(id, { title: moved.title, start: moved.start, end: moved.end })
+      await updateEvent(id, { title: moved.title, start: moved.start, end: moved.end, source: "Drag" })
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
       reload() // roll back to what the server has
