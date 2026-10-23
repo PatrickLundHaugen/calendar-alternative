@@ -11,3 +11,7 @@ appsettings.Development.json
 
 # Local database
 calendar.db
+test.db
+
+# Trained ML model files
+App_Data/
