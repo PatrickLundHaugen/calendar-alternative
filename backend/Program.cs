@@ -20,6 +20,7 @@ builder.Services.AddHttpClient<GeminiClient>(c =>
 });
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<ActivityLogService>();
+builder.Services.AddScoped<TrainingDataBuilder>();
 
 var app = builder.Build();
 

@@ -5,9 +5,9 @@ namespace CalendarAlternative.Api.Services;
 public class SchedulingService(EventService events)
 {
     // Tunable rules
-    private const int DayStartHour = 8;
-    private const int DayEndHour = 22;
-    private const int StepMinutes = 30;
+    public const int DayStartHour = 8;
+    public const int DayEndHour = 22;
+    public const int StepMinutes = 30;
     private const int DefaultHorizonDays = 14;
 
     // Ranking weights: lower score is better. The gaps make the priorities strict.
